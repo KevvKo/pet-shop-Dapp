@@ -25,36 +25,37 @@ App = {
 
   initWeb3: async function() {
 
-    if(window.ethereum){
-      App.web3provider = windiw.ethereum
-
-      try{
-        await window.ethereum.enable()
-      }catch(error){
-        console.log('User denied account access')
+    if (window.ethereum) {
+      App.web3Provider = window.ethereum;
+      try {
+        // Request account access
+        await window.ethereum.enable();
+      } catch (error) {
+        // User denied account access...
+        console.error("User denied account access")
       }
-    } else if (window.web3){
-      App.web3Provider = window.web3.currentProvider
-    } else {
-      App.web3Provider = new Web3.providers.HttpProvider('http://localhost:7545')
     }
-
-    web3 = new Web3(App.web3Provider)
-    return App.initContract();
+    // Legacy dapp browsers...
+    else if (window.web3) {
+      App.web3Provider = window.web3.currentProvider;
+    }
+    // If no injected web3 instance is detected, fall back to Ganache
+    else {
+      App.web3Provider = new Web3.providers.HttpProvider('http://localhost:7545');
+    }
+    web3 = new Web3(App.web3Provider);
   },
 
   initContract: function() {
 
     $.getJSON('Adoption.json', function(data) {
-
-      const AdoptionArtifact = data;
-
+      var AdoptionArtifact = data;
       App.contracts.Adoption = TruffleContract(AdoptionArtifact);
+    
       App.contracts.Adoption.setProvider(App.web3Provider);
     
       return App.markAdopted();
     });
-    return App.bindEvents();
   },
 
   bindEvents: function() {
@@ -67,7 +68,7 @@ App = {
 
     App.contracts.Adoption.deployed().then(function(instance) {
       adoptionInstance = instance;
-
+    
       return adoptionInstance.getAdopters.call();
     }).then(function(adopters) {
       for (i = 0; i < adopters.length; i++) {
